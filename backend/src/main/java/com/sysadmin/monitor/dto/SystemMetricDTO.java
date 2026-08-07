@@ -21,4 +21,9 @@ public class SystemMetricDTO {
     @Min(0)
     @Max(100)
     private Double ramUsage;
+
+    @NotNull
+    @Min(0)
+    @Max(100)
+    private Double diskUsage;
 }

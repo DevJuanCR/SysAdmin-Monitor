@@ -24,15 +24,17 @@ public class MetricService {
                 .timestamp(LocalDateTime.now())
                 .cpuUsage(dto.getCpuUsage())
                 .ramUsage(dto.getRamUsage())
+                .diskUsage(dto.getDiskUsage())
                 .build();
 
         SystemMetric savedMetric = metricRepository.save(metric);
 
-        log.info("Metrica guardada - Host: {} ID: {} CPU: {}% RAM: {}%",
+        log.info("Metrica guardada - Host: {} ID: {} CPU: {}% RAM: {}% Disco: {}%",
                 savedMetric.getHostname(),
                 savedMetric.getId(),
                 savedMetric.getCpuUsage(),
-                savedMetric.getRamUsage());
+                savedMetric.getRamUsage(),
+                savedMetric.getDiskUsage());
 
         return savedMetric;
     }

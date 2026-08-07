@@ -27,7 +27,7 @@ class MetricServiceTest {
 
     @Test
     void saveMetric_shouldSaveAndReturnMetric() {
-        SystemMetricDTO dto = new SystemMetricDTO("PC-01", 45.2, 67.8);
+        SystemMetricDTO dto = new SystemMetricDTO("PC-01", 45.2, 67.8, 71.5);
 
         SystemMetric saved = SystemMetric.builder()
                 .id(1L)
@@ -35,6 +35,7 @@ class MetricServiceTest {
                 .timestamp(LocalDateTime.now())
                 .cpuUsage(45.2)
                 .ramUsage(67.8)
+                .diskUsage(71.5)
                 .build();
 
         when(metricRepository.save(any(SystemMetric.class))).thenReturn(saved);
@@ -46,6 +47,7 @@ class MetricServiceTest {
         assertEquals("PC-01", result.getHostname());
         assertEquals(45.2, result.getCpuUsage());
         assertEquals(67.8, result.getRamUsage());
+        assertEquals(71.5, result.getDiskUsage());
         verify(metricRepository, times(1)).save(any(SystemMetric.class));
     }
 
