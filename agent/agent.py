@@ -8,13 +8,16 @@ import os
 API_URL = os.getenv("API_URL", "http://localhost:8080/api/metrics")
 INTERVALO_SEGUNDOS = int(os.getenv("INTERVALO", "5"))
 HOSTNAME = os.getenv("HOSTNAME_OVERRIDE", socket.gethostname())
+RUTA_DISCO = os.getenv("RUTA_DISCO", "/")
 
 
 def obtener_metricas():
     # cogemos el porcentaje de CPU y RAM del sistema
     cpu = psutil.cpu_percent(interval=1)
     ram = psutil.virtual_memory().percent
-    return {"hostname": HOSTNAME, "cpuUsage": cpu, "ramUsage": ram}
+    # el disco lo miramos en la particion que nos digan por env, por defecto la raiz
+    disco = psutil.disk_usage(RUTA_DISCO).percent
+    return {"hostname": HOSTNAME, "cpuUsage": cpu, "ramUsage": ram, "diskUsage": disco}
 
 
 def enviar_metricas(metricas):
@@ -24,7 +27,8 @@ def enviar_metricas(metricas):
         if respuesta.status_code == 201:
             datos = respuesta.json()
             print(f"[OK] {datos['hostname']} - ID: {datos['id']} "
-                  f"CPU: {datos['cpuUsage']}% RAM: {datos['ramUsage']}%")
+                  f"CPU: {datos['cpuUsage']}% RAM: {datos['ramUsage']}% "
+                  f"Disco: {datos['diskUsage']}%")
         else:
             print(f"[WARN] Respuesta inesperada: {respuesta.status_code}")
     except requests.exceptions.ConnectionError:
@@ -41,6 +45,7 @@ def main():
     print("  SysAdmin Monitor Agent")
     print(f"  Host: {HOSTNAME}")
     print(f"  Enviando metricas a: {API_URL}")
+    print(f"  Disco vigilado: {RUTA_DISCO}")
     print(f"  Intervalo: cada {INTERVALO_SEGUNDOS} segundos")
     print("  Pulsa Ctrl+C para detener")
     print("=" * 55)

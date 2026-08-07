@@ -34,7 +34,7 @@ class MetricControllerTest {
 
     @Test
     void postMetric_withValidData_shouldReturn201() throws Exception {
-        SystemMetricDTO dto = new SystemMetricDTO("PC-01", 45.2, 67.8);
+        SystemMetricDTO dto = new SystemMetricDTO("PC-01", 45.2, 67.8, 71.5);
 
         SystemMetric saved = SystemMetric.builder()
                 .id(1L)
@@ -42,6 +42,7 @@ class MetricControllerTest {
                 .timestamp(LocalDateTime.now())
                 .cpuUsage(45.2)
                 .ramUsage(67.8)
+                .diskUsage(71.5)
                 .build();
 
         when(metricService.saveMetric(any(SystemMetricDTO.class))).thenReturn(saved);
@@ -57,7 +58,7 @@ class MetricControllerTest {
 
     @Test
     void postMetric_withNullHostname_shouldReturn400() throws Exception {
-        String json = "{\"cpuUsage\": 45.2, \"ramUsage\": 67.8}";
+        String json = "{\"cpuUsage\": 45.2, \"ramUsage\": 67.8, \"diskUsage\": 71.5}";
 
         mockMvc.perform(post("/api/metrics")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -68,7 +69,7 @@ class MetricControllerTest {
 
     @Test
     void postMetric_withNullCpu_shouldReturn400() throws Exception {
-        String json = "{\"hostname\": \"PC-01\", \"ramUsage\": 67.8}";
+        String json = "{\"hostname\": \"PC-01\", \"ramUsage\": 67.8, \"diskUsage\": 71.5}";
 
         mockMvc.perform(post("/api/metrics")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -79,7 +80,7 @@ class MetricControllerTest {
 
     @Test
     void postMetric_withCpuOver100_shouldReturn400() throws Exception {
-        String json = "{\"hostname\": \"PC-01\", \"cpuUsage\": 150.0, \"ramUsage\": 67.8}";
+        String json = "{\"hostname\": \"PC-01\", \"cpuUsage\": 150.0, \"ramUsage\": 67.8, \"diskUsage\": 71.5}";
 
         mockMvc.perform(post("/api/metrics")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -90,7 +91,7 @@ class MetricControllerTest {
 
     @Test
     void postMetric_withNegativeRam_shouldReturn400() throws Exception {
-        String json = "{\"hostname\": \"PC-01\", \"cpuUsage\": 45.2, \"ramUsage\": -5.0}";
+        String json = "{\"hostname\": \"PC-01\", \"cpuUsage\": 45.2, \"ramUsage\": -5.0, \"diskUsage\": 71.5}";
 
         mockMvc.perform(post("/api/metrics")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -107,6 +108,7 @@ class MetricControllerTest {
                 .timestamp(LocalDateTime.now())
                 .cpuUsage(45.2)
                 .ramUsage(67.8)
+                .diskUsage(71.5)
                 .build();
 
         when(metricService.getLatestMetrics(null)).thenReturn(List.of(metric));
@@ -124,6 +126,7 @@ class MetricControllerTest {
                 .timestamp(LocalDateTime.now())
                 .cpuUsage(45.2)
                 .ramUsage(67.8)
+                .diskUsage(71.5)
                 .build();
 
         when(metricService.getLatestMetrics(eq("PC-01"))).thenReturn(List.of(metric));

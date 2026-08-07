@@ -28,4 +28,7 @@ public class SystemMetric {
 
     @Column(nullable = false)
     private Double ramUsage;
+
+    @Column
+    private Double diskUsage;
 }
