@@ -4,6 +4,7 @@ const INTERVALO = 5000;
 const statusEl = document.getElementById("status");
 const cpuValueEl = document.getElementById("cpu-value");
 const ramValueEl = document.getElementById("ram-value");
+const diskValueEl = document.getElementById("disk-value");
 const hostSelect = document.getElementById("host-select");
 
 function crearConfig(label, color) {
@@ -52,6 +53,11 @@ const cpuChart = new Chart(
 const ramChart = new Chart(
     document.getElementById("ramChart"),
     crearConfig("RAM", "#a78bfa")
+);
+
+const diskChart = new Chart(
+    document.getElementById("diskChart"),
+    crearConfig("Disco", "#34d399")
 );
 
 function formatearHora(timestamp) {
@@ -114,13 +120,20 @@ async function fetchMetricas() {
         const labels = metricas.map(m => formatearHora(m.timestamp));
         const cpuData = metricas.map(m => m.cpuUsage);
         const ramData = metricas.map(m => m.ramUsage);
+        const diskData = metricas.map(m => m.diskUsage);
 
         actualizarGrafico(cpuChart, labels, cpuData);
         actualizarGrafico(ramChart, labels, ramData);
+        actualizarGrafico(diskChart, labels, diskData);
 
         const ultima = metricas[metricas.length - 1];
         cpuValueEl.textContent = ultima.cpuUsage.toFixed(1) + "%";
         ramValueEl.textContent = ultima.ramUsage.toFixed(1) + "%";
+        if (ultima.diskUsage !== null && ultima.diskUsage !== undefined) {
+            diskValueEl.textContent = ultima.diskUsage.toFixed(1) + "%";
+        } else {
+            diskValueEl.textContent = "--%";
+        }
 
         statusEl.textContent = "Conectado";
         statusEl.className = "connected";
