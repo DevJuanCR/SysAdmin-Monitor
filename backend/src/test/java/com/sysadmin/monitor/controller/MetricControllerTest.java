@@ -154,4 +154,44 @@ class MetricControllerTest {
                 .andExpect(jsonPath("$[0]").value("PC-01"))
                 .andExpect(jsonPath("$[1]").value("PC-02"));
     }
+
+    @Test
+    void postMetric_withNullDisk_shouldReturn400() throws Exception {
+        String json = "{\"hostname\": \"PC-01\", \"cpuUsage\": 45.2, \"ramUsage\": 67.8}";
+
+        mockMvc.perform(post("/api/metrics")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.diskUsage").exists());
+    }
+
+    @Test
+    void postMetric_withDiskOver100_shouldReturn400() throws Exception {
+        String json = "{\"hostname\": \"PC-01\", \"cpuUsage\": 45.2, \"ramUsage\": 67.8, \"diskUsage\": 120.0}";
+
+        mockMvc.perform(post("/api/metrics")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.diskUsage").exists());
+    }
+
+    @Test
+    void getMetrics_shouldIncludeDiskUsage() throws Exception {
+        SystemMetric metric = SystemMetric.builder()
+                .id(1L)
+                .hostname("PC-01")
+                .timestamp(LocalDateTime.now())
+                .cpuUsage(45.2)
+                .ramUsage(67.8)
+                .diskUsage(88.4)
+                .build();
+
+        when(metricService.getLatestMetrics(null)).thenReturn(List.of(metric));
+
+        mockMvc.perform(get("/api/metrics"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].diskUsage").value(88.4));
+    }
 }
