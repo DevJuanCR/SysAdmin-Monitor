@@ -5,6 +5,7 @@ import com.sysadmin.monitor.entity.SystemMetric;
 import com.sysadmin.monitor.repository.SystemMetricRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -113,5 +114,46 @@ class MetricServiceTest {
         assertEquals(2, result.size());
         assertTrue(result.contains("PC-01"));
         assertTrue(result.contains("PC-02"));
+    }
+
+    @Test
+    void saveMetric_shouldKeepDiskUsage() {
+        SystemMetricDTO dto = new SystemMetricDTO("PC-01", 45.2, 67.8, 88.4);
+
+        SystemMetric saved = SystemMetric.builder()
+                .id(1L)
+                .hostname("PC-01")
+                .timestamp(LocalDateTime.now())
+                .cpuUsage(45.2)
+                .ramUsage(67.8)
+                .diskUsage(88.4)
+                .build();
+
+        when(metricRepository.save(any(SystemMetric.class))).thenReturn(saved);
+
+        metricService.saveMetric(dto);
+
+        ArgumentCaptor<SystemMetric> captor = ArgumentCaptor.forClass(SystemMetric.class);
+        verify(metricRepository).save(captor.capture());
+        assertEquals(88.4, captor.getValue().getDiskUsage());
+    }
+
+    @Test
+    void getLatestMetrics_shouldReturnDiskUsage() {
+        SystemMetric m1 = SystemMetric.builder()
+                .id(1L)
+                .hostname("PC-01")
+                .timestamp(LocalDateTime.now())
+                .cpuUsage(30.0)
+                .ramUsage(50.0)
+                .diskUsage(72.3)
+                .build();
+
+        when(metricRepository.findTop20ByHostnameOrderByTimestampDesc("PC-01"))
+                .thenReturn(List.of(m1));
+
+        List<SystemMetric> result = metricService.getLatestMetrics("PC-01");
+
+        assertEquals(72.3, result.get(0).getDiskUsage());
     }
 }
