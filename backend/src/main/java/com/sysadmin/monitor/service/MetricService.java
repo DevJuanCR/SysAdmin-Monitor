@@ -25,16 +25,20 @@ public class MetricService {
                 .cpuUsage(dto.getCpuUsage())
                 .ramUsage(dto.getRamUsage())
                 .diskUsage(dto.getDiskUsage())
+                .netSent(dto.getNetSent())
+                .netRecv(dto.getNetRecv())
                 .build();
 
         SystemMetric savedMetric = metricRepository.save(metric);
 
-        log.info("Metrica guardada - Host: {} ID: {} CPU: {}% RAM: {}% Disco: {}%",
+        log.info("Metrica guardada - Host: {} ID: {} CPU: {}% RAM: {}% Disco: {}% Red: {}/{} B/s",
                 savedMetric.getHostname(),
                 savedMetric.getId(),
                 savedMetric.getCpuUsage(),
                 savedMetric.getRamUsage(),
-                savedMetric.getDiskUsage());
+                savedMetric.getDiskUsage(),
+                savedMetric.getNetSent(),
+                savedMetric.getNetRecv());
 
         return savedMetric;
     }

@@ -31,4 +31,10 @@ public class SystemMetric {
 
     @Column
     private Double diskUsage;
+
+    @Column
+    private Double netSent;
+
+    @Column
+    private Double netRecv;
 }

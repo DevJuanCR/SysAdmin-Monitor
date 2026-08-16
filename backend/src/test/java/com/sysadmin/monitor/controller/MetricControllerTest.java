@@ -34,7 +34,7 @@ class MetricControllerTest {
 
     @Test
     void postMetric_withValidData_shouldReturn201() throws Exception {
-        SystemMetricDTO dto = new SystemMetricDTO("PC-01", 45.2, 67.8, 71.5);
+        SystemMetricDTO dto = new SystemMetricDTO("PC-01", 45.2, 67.8, 71.5, 1024.0, 2048.0);
 
         SystemMetric saved = SystemMetric.builder()
                 .id(1L)
@@ -58,7 +58,7 @@ class MetricControllerTest {
 
     @Test
     void postMetric_withNullHostname_shouldReturn400() throws Exception {
-        String json = "{\"cpuUsage\": 45.2, \"ramUsage\": 67.8, \"diskUsage\": 71.5}";
+        String json = "{\"cpuUsage\": 45.2, \"ramUsage\": 67.8, \"diskUsage\": 71.5, \"netSent\": 1024.0, \"netRecv\": 2048.0}";
 
         mockMvc.perform(post("/api/metrics")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -69,7 +69,7 @@ class MetricControllerTest {
 
     @Test
     void postMetric_withNullCpu_shouldReturn400() throws Exception {
-        String json = "{\"hostname\": \"PC-01\", \"ramUsage\": 67.8, \"diskUsage\": 71.5}";
+        String json = "{\"hostname\": \"PC-01\", \"ramUsage\": 67.8, \"diskUsage\": 71.5, \"netSent\": 1024.0, \"netRecv\": 2048.0}";
 
         mockMvc.perform(post("/api/metrics")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -80,7 +80,7 @@ class MetricControllerTest {
 
     @Test
     void postMetric_withCpuOver100_shouldReturn400() throws Exception {
-        String json = "{\"hostname\": \"PC-01\", \"cpuUsage\": 150.0, \"ramUsage\": 67.8, \"diskUsage\": 71.5}";
+        String json = "{\"hostname\": \"PC-01\", \"cpuUsage\": 150.0, \"ramUsage\": 67.8, \"diskUsage\": 71.5, \"netSent\": 1024.0, \"netRecv\": 2048.0}";
 
         mockMvc.perform(post("/api/metrics")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -91,7 +91,7 @@ class MetricControllerTest {
 
     @Test
     void postMetric_withNegativeRam_shouldReturn400() throws Exception {
-        String json = "{\"hostname\": \"PC-01\", \"cpuUsage\": 45.2, \"ramUsage\": -5.0, \"diskUsage\": 71.5}";
+        String json = "{\"hostname\": \"PC-01\", \"cpuUsage\": 45.2, \"ramUsage\": -5.0, \"diskUsage\": 71.5, \"netSent\": 1024.0, \"netRecv\": 2048.0}";
 
         mockMvc.perform(post("/api/metrics")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -157,7 +157,7 @@ class MetricControllerTest {
 
     @Test
     void postMetric_withNullDisk_shouldReturn400() throws Exception {
-        String json = "{\"hostname\": \"PC-01\", \"cpuUsage\": 45.2, \"ramUsage\": 67.8}";
+        String json = "{\"hostname\": \"PC-01\", \"cpuUsage\": 45.2, \"ramUsage\": 67.8, \"netSent\": 1024.0, \"netRecv\": 2048.0}";
 
         mockMvc.perform(post("/api/metrics")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -168,7 +168,7 @@ class MetricControllerTest {
 
     @Test
     void postMetric_withDiskOver100_shouldReturn400() throws Exception {
-        String json = "{\"hostname\": \"PC-01\", \"cpuUsage\": 45.2, \"ramUsage\": 67.8, \"diskUsage\": 120.0}";
+        String json = "{\"hostname\": \"PC-01\", \"cpuUsage\": 45.2, \"ramUsage\": 67.8, \"diskUsage\": 120.0, \"netSent\": 1024.0, \"netRecv\": 2048.0}";
 
         mockMvc.perform(post("/api/metrics")
                         .contentType(MediaType.APPLICATION_JSON)
