@@ -26,4 +26,12 @@ public class SystemMetricDTO {
     @Min(0)
     @Max(100)
     private Double diskUsage;
+
+    @NotNull
+    @Min(0)
+    private Double netSent;
+
+    @NotNull
+    @Min(0)
+    private Double netRecv;
 }

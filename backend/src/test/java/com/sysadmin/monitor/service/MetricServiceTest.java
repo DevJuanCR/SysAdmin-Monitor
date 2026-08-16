@@ -28,7 +28,7 @@ class MetricServiceTest {
 
     @Test
     void saveMetric_shouldSaveAndReturnMetric() {
-        SystemMetricDTO dto = new SystemMetricDTO("PC-01", 45.2, 67.8, 71.5);
+        SystemMetricDTO dto = new SystemMetricDTO("PC-01", 45.2, 67.8, 71.5, 1024.0, 2048.0);
 
         SystemMetric saved = SystemMetric.builder()
                 .id(1L)
@@ -118,7 +118,7 @@ class MetricServiceTest {
 
     @Test
     void saveMetric_shouldKeepDiskUsage() {
-        SystemMetricDTO dto = new SystemMetricDTO("PC-01", 45.2, 67.8, 88.4);
+        SystemMetricDTO dto = new SystemMetricDTO("PC-01", 45.2, 67.8, 88.4, 1024.0, 2048.0);
 
         SystemMetric saved = SystemMetric.builder()
                 .id(1L)

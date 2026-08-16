@@ -10,6 +10,30 @@ INTERVALO_SEGUNDOS = int(os.getenv("INTERVALO", "5"))
 HOSTNAME = os.getenv("HOSTNAME_OVERRIDE", socket.gethostname())
 RUTA_DISCO = os.getenv("RUTA_DISCO", "/")
 
+# guardamos el contador de red y el momento de la ultima lectura para calcular la velocidad
+ultima_red = psutil.net_io_counters()
+ultimo_momento = time.time()
+
+
+def obtener_velocidad_red():
+    global ultima_red, ultimo_momento
+    # los contadores de psutil son acumulados asi que restamos la lectura anterior
+    red = psutil.net_io_counters()
+    momento = time.time()
+    segundos = momento - ultimo_momento
+    if segundos <= 0:
+        segundos = 1
+    enviado = (red.bytes_sent - ultima_red.bytes_sent) / segundos
+    recibido = (red.bytes_recv - ultima_red.bytes_recv) / segundos
+    ultima_red = red
+    ultimo_momento = momento
+    # si el contador se reinicia salen negativos, los dejamos a cero
+    if enviado < 0:
+        enviado = 0
+    if recibido < 0:
+        recibido = 0
+    return round(enviado, 2), round(recibido, 2)
+
 
 def obtener_metricas():
     # cogemos el porcentaje de CPU y RAM del sistema
@@ -17,7 +41,9 @@ def obtener_metricas():
     ram = psutil.virtual_memory().percent
     # el disco lo miramos en la particion que nos digan por env, por defecto la raiz
     disco = psutil.disk_usage(RUTA_DISCO).percent
-    return {"hostname": HOSTNAME, "cpuUsage": cpu, "ramUsage": ram, "diskUsage": disco}
+    enviado, recibido = obtener_velocidad_red()
+    return {"hostname": HOSTNAME, "cpuUsage": cpu, "ramUsage": ram, "diskUsage": disco,
+            "netSent": enviado, "netRecv": recibido}
 
 
 def enviar_metricas(metricas):
@@ -28,7 +54,8 @@ def enviar_metricas(metricas):
             datos = respuesta.json()
             print(f"[OK] {datos['hostname']} - ID: {datos['id']} "
                   f"CPU: {datos['cpuUsage']}% RAM: {datos['ramUsage']}% "
-                  f"Disco: {datos['diskUsage']}%")
+                  f"Disco: {datos['diskUsage']}% "
+                  f"Red: {datos['netSent']}/{datos['netRecv']} B/s")
         else:
             print(f"[WARN] Respuesta inesperada: {respuesta.status_code}")
     except requests.exceptions.ConnectionError:
