@@ -1,5 +1,6 @@
 package com.sysadmin.monitor.repository;
 
+import com.sysadmin.monitor.dto.MetricSummaryDTO;
 import com.sysadmin.monitor.entity.SystemMetric;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -16,4 +17,7 @@ public interface SystemMetricRepository extends JpaRepository<SystemMetric, Long
 
     @Query("SELECT DISTINCT m.hostname FROM SystemMetric m ORDER BY m.hostname")
     List<String> findDistinctHostnames();
+
+    @Query("SELECT new com.sysadmin.monitor.dto.MetricSummaryDTO(m.hostname, AVG(m.cpuUsage), MAX(m.cpuUsage), AVG(m.ramUsage), MAX(m.ramUsage), AVG(m.diskUsage), MAX(m.diskUsage)) FROM SystemMetric m GROUP BY m.hostname ORDER BY m.hostname")
+    List<MetricSummaryDTO> findSummaryByHost();
 }

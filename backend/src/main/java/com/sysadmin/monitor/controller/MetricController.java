@@ -1,5 +1,6 @@
 package com.sysadmin.monitor.controller;
 
+import com.sysadmin.monitor.dto.MetricSummaryDTO;
 import com.sysadmin.monitor.dto.SystemMetricDTO;
 import com.sysadmin.monitor.entity.SystemMetric;
 import com.sysadmin.monitor.service.MetricService;
@@ -30,6 +31,12 @@ public class MetricController {
             @RequestParam(required = false) String hostname) {
         List<SystemMetric> metrics = metricService.getLatestMetrics(hostname);
         return ResponseEntity.ok(metrics);
+    }
+
+    @GetMapping("/summary")
+    public ResponseEntity<List<MetricSummaryDTO>> getSummary() {
+        List<MetricSummaryDTO> summary = metricService.getSummary();
+        return ResponseEntity.ok(summary);
     }
 
     @GetMapping("/hosts")

@@ -1,5 +1,6 @@
 package com.sysadmin.monitor.service;
 
+import com.sysadmin.monitor.dto.MetricSummaryDTO;
 import com.sysadmin.monitor.dto.SystemMetricDTO;
 import com.sysadmin.monitor.entity.SystemMetric;
 import com.sysadmin.monitor.repository.SystemMetricRepository;
@@ -53,6 +54,10 @@ public class MetricService {
         }
 
         return metrics.reversed();
+    }
+
+    public List<MetricSummaryDTO> getSummary() {
+        return metricRepository.findSummaryByHost();
     }
 
     public List<String> getHostnames() {
