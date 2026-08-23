@@ -1,6 +1,7 @@
 package com.sysadmin.monitor.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sysadmin.monitor.dto.MetricSummaryDTO;
 import com.sysadmin.monitor.dto.SystemMetricDTO;
 import com.sysadmin.monitor.entity.SystemMetric;
 import com.sysadmin.monitor.service.MetricService;
@@ -193,5 +194,35 @@ class MetricControllerTest {
         mockMvc.perform(get("/api/metrics"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].diskUsage").value(88.4));
+    }
+
+    @Test
+    void getSummary_shouldReturn200() throws Exception {
+        MetricSummaryDTO summary = MetricSummaryDTO.builder()
+                .hostname("PC-01")
+                .cpuAvg(40.0)
+                .cpuMax(80.0)
+                .ramAvg(50.0)
+                .ramMax(70.0)
+                .diskAvg(60.0)
+                .diskMax(90.0)
+                .build();
+
+        when(metricService.getSummary()).thenReturn(List.of(summary));
+
+        mockMvc.perform(get("/api/metrics/summary"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].hostname").value("PC-01"))
+                .andExpect(jsonPath("$[0].cpuAvg").value(40.0))
+                .andExpect(jsonPath("$[0].diskMax").value(90.0));
+    }
+
+    @Test
+    void getSummary_withNoData_shouldReturnEmptyList() throws Exception {
+        when(metricService.getSummary()).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/metrics/summary"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isEmpty());
     }
 }

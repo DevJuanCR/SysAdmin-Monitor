@@ -1,5 +1,6 @@
 package com.sysadmin.monitor.service;
 
+import com.sysadmin.monitor.dto.MetricSummaryDTO;
 import com.sysadmin.monitor.dto.SystemMetricDTO;
 import com.sysadmin.monitor.entity.SystemMetric;
 import com.sysadmin.monitor.repository.SystemMetricRepository;
@@ -155,5 +156,47 @@ class MetricServiceTest {
         List<SystemMetric> result = metricService.getLatestMetrics("PC-01");
 
         assertEquals(72.3, result.get(0).getDiskUsage());
+    }
+
+    @Test
+    void getSummary_shouldReturnOneRowPerHost() {
+        MetricSummaryDTO s1 = MetricSummaryDTO.builder()
+                .hostname("PC-01")
+                .cpuAvg(40.0)
+                .cpuMax(80.0)
+                .ramAvg(50.0)
+                .ramMax(70.0)
+                .diskAvg(60.0)
+                .diskMax(90.0)
+                .build();
+
+        MetricSummaryDTO s2 = MetricSummaryDTO.builder()
+                .hostname("PC-02")
+                .cpuAvg(20.0)
+                .cpuMax(35.0)
+                .ramAvg(30.0)
+                .ramMax(45.0)
+                .diskAvg(55.0)
+                .diskMax(65.0)
+                .build();
+
+        when(metricRepository.findSummaryByHost()).thenReturn(List.of(s1, s2));
+
+        List<MetricSummaryDTO> result = metricService.getSummary();
+
+        assertEquals(2, result.size());
+        assertEquals("PC-01", result.get(0).getHostname());
+        assertEquals(80.0, result.get(0).getCpuMax());
+        assertEquals(55.0, result.get(1).getDiskAvg());
+    }
+
+    @Test
+    void getSummary_withNoData_shouldReturnEmptyList() {
+        when(metricRepository.findSummaryByHost()).thenReturn(List.of());
+
+        List<MetricSummaryDTO> result = metricService.getSummary();
+
+        assertTrue(result.isEmpty());
+        verify(metricRepository, times(1)).findSummaryByHost();
     }
 }
