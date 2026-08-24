@@ -112,7 +112,7 @@ class MetricControllerTest {
                 .diskUsage(71.5)
                 .build();
 
-        when(metricService.getLatestMetrics(null)).thenReturn(List.of(metric));
+        when(metricService.getLatestMetrics(null, 20)).thenReturn(List.of(metric));
 
         mockMvc.perform(get("/api/metrics"))
                 .andExpect(status().isOk())
@@ -130,7 +130,7 @@ class MetricControllerTest {
                 .diskUsage(71.5)
                 .build();
 
-        when(metricService.getLatestMetrics(eq("PC-01"))).thenReturn(List.of(metric));
+        when(metricService.getLatestMetrics(eq("PC-01"), eq(20))).thenReturn(List.of(metric));
 
         mockMvc.perform(get("/api/metrics").param("hostname", "PC-01"))
                 .andExpect(status().isOk())
@@ -139,7 +139,7 @@ class MetricControllerTest {
 
     @Test
     void getMetrics_withNoData_shouldReturnEmptyList() throws Exception {
-        when(metricService.getLatestMetrics(null)).thenReturn(List.of());
+        when(metricService.getLatestMetrics(null, 20)).thenReturn(List.of());
 
         mockMvc.perform(get("/api/metrics"))
                 .andExpect(status().isOk())
@@ -189,7 +189,7 @@ class MetricControllerTest {
                 .diskUsage(88.4)
                 .build();
 
-        when(metricService.getLatestMetrics(null)).thenReturn(List.of(metric));
+        when(metricService.getLatestMetrics(null, 20)).thenReturn(List.of(metric));
 
         mockMvc.perform(get("/api/metrics"))
                 .andExpect(status().isOk())
@@ -224,5 +224,23 @@ class MetricControllerTest {
         mockMvc.perform(get("/api/metrics/summary"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isEmpty());
+    }
+
+    @Test
+    void getMetrics_withLimit_shouldPassLimitToService() throws Exception {
+        SystemMetric metric = SystemMetric.builder()
+                .id(1L)
+                .hostname("PC-01")
+                .timestamp(LocalDateTime.now())
+                .cpuUsage(45.2)
+                .ramUsage(67.8)
+                .diskUsage(71.5)
+                .build();
+
+        when(metricService.getLatestMetrics(null, 5)).thenReturn(List.of(metric));
+
+        mockMvc.perform(get("/api/metrics").param("limit", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].hostname").value("PC-01"));
     }
 }
