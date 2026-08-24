@@ -28,8 +28,9 @@ public class MetricController {
 
     @GetMapping
     public ResponseEntity<List<SystemMetric>> getLatestMetrics(
-            @RequestParam(required = false) String hostname) {
-        List<SystemMetric> metrics = metricService.getLatestMetrics(hostname);
+            @RequestParam(required = false) String hostname,
+            @RequestParam(defaultValue = "20") int limit) {
+        List<SystemMetric> metrics = metricService.getLatestMetrics(hostname, limit);
         return ResponseEntity.ok(metrics);
     }
 

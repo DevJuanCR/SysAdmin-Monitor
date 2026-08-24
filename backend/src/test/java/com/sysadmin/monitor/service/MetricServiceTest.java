@@ -10,12 +10,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -63,10 +65,10 @@ class MetricServiceTest {
                 .ramUsage(50.0)
                 .build();
 
-        when(metricRepository.findTop20ByHostnameOrderByTimestampDesc("PC-01"))
+        when(metricRepository.findByHostnameOrderByTimestampDesc(eq("PC-01"), any(Pageable.class)))
                 .thenReturn(List.of(m1));
 
-        List<SystemMetric> result = metricService.getLatestMetrics("PC-01");
+        List<SystemMetric> result = metricService.getLatestMetrics("PC-01", 20);
 
         assertEquals(1, result.size());
         assertEquals("PC-01", result.get(0).getHostname());
@@ -90,18 +92,18 @@ class MetricServiceTest {
                 .ramUsage(40.0)
                 .build();
 
-        when(metricRepository.findTop20ByOrderByTimestampDesc()).thenReturn(List.of(m1, m2));
+        when(metricRepository.findByOrderByTimestampDesc(any(Pageable.class))).thenReturn(List.of(m1, m2));
 
-        List<SystemMetric> result = metricService.getLatestMetrics(null);
+        List<SystemMetric> result = metricService.getLatestMetrics(null, 20);
 
         assertEquals(2, result.size());
     }
 
     @Test
     void getLatestMetrics_shouldReturnEmptyList() {
-        when(metricRepository.findTop20ByOrderByTimestampDesc()).thenReturn(List.of());
+        when(metricRepository.findByOrderByTimestampDesc(any(Pageable.class))).thenReturn(List.of());
 
-        List<SystemMetric> result = metricService.getLatestMetrics(null);
+        List<SystemMetric> result = metricService.getLatestMetrics(null, 20);
 
         assertTrue(result.isEmpty());
     }
@@ -150,10 +152,10 @@ class MetricServiceTest {
                 .diskUsage(72.3)
                 .build();
 
-        when(metricRepository.findTop20ByHostnameOrderByTimestampDesc("PC-01"))
+        when(metricRepository.findByHostnameOrderByTimestampDesc(eq("PC-01"), any(Pageable.class)))
                 .thenReturn(List.of(m1));
 
-        List<SystemMetric> result = metricService.getLatestMetrics("PC-01");
+        List<SystemMetric> result = metricService.getLatestMetrics("PC-01", 20);
 
         assertEquals(72.3, result.get(0).getDiskUsage());
     }
@@ -198,5 +200,27 @@ class MetricServiceTest {
 
         assertTrue(result.isEmpty());
         verify(metricRepository, times(1)).findSummaryByHost();
+    }
+
+    @Test
+    void getLatestMetrics_withLimitTooBig_shouldUseMaximum() {
+        when(metricRepository.findByOrderByTimestampDesc(any(Pageable.class))).thenReturn(List.of());
+
+        metricService.getLatestMetrics(null, 500);
+
+        ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
+        verify(metricRepository).findByOrderByTimestampDesc(captor.capture());
+        assertEquals(100, captor.getValue().getPageSize());
+    }
+
+    @Test
+    void getLatestMetrics_withLimitZero_shouldUseOne() {
+        when(metricRepository.findByOrderByTimestampDesc(any(Pageable.class))).thenReturn(List.of());
+
+        metricService.getLatestMetrics(null, 0);
+
+        ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
+        verify(metricRepository).findByOrderByTimestampDesc(captor.capture());
+        assertEquals(1, captor.getValue().getPageSize());
     }
 }

@@ -6,6 +6,8 @@ import com.sysadmin.monitor.entity.SystemMetric;
 import com.sysadmin.monitor.repository.SystemMetricRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -15,6 +17,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class MetricService {
+
+    private static final int MAX_LIMIT = 100;
 
     private final SystemMetricRepository metricRepository;
 
@@ -44,13 +48,24 @@ public class MetricService {
         return savedMetric;
     }
 
-    public List<SystemMetric> getLatestMetrics(String hostname) {
+    public List<SystemMetric> getLatestMetrics(String hostname, int limit) {
+        int total = limit;
+
+        if (total < 1) {
+            total = 1;
+        }
+
+        if (total > MAX_LIMIT) {
+            total = MAX_LIMIT;
+        }
+
+        Pageable pageable = PageRequest.of(0, total);
         List<SystemMetric> metrics;
 
         if (hostname != null && !hostname.isBlank()) {
-            metrics = metricRepository.findTop20ByHostnameOrderByTimestampDesc(hostname);
+            metrics = metricRepository.findByHostnameOrderByTimestampDesc(hostname, pageable);
         } else {
-            metrics = metricRepository.findTop20ByOrderByTimestampDesc();
+            metrics = metricRepository.findByOrderByTimestampDesc(pageable);
         }
 
         return metrics.reversed();
