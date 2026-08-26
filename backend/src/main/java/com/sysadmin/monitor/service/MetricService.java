@@ -1,16 +1,19 @@
 package com.sysadmin.monitor.service;
 
+import com.sysadmin.monitor.dto.AlertDTO;
 import com.sysadmin.monitor.dto.MetricSummaryDTO;
 import com.sysadmin.monitor.dto.SystemMetricDTO;
 import com.sysadmin.monitor.entity.SystemMetric;
 import com.sysadmin.monitor.repository.SystemMetricRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -21,6 +24,12 @@ public class MetricService {
     private static final int MAX_LIMIT = 100;
 
     private final SystemMetricRepository metricRepository;
+
+    @Value("${monitor.alerts.cpu:85}")
+    private double cpuThreshold;
+
+    @Value("${monitor.alerts.ram:90}")
+    private double ramThreshold;
 
     public SystemMetric saveMetric(SystemMetricDTO dto) {
 
@@ -73,6 +82,41 @@ public class MetricService {
 
     public List<MetricSummaryDTO> getSummary() {
         return metricRepository.findSummaryByHost();
+    }
+
+    public List<AlertDTO> getAlerts() {
+        List<AlertDTO> alerts = new ArrayList<>();
+        Pageable pageable = PageRequest.of(0, 1);
+
+        for (String hostname : metricRepository.findDistinctHostnames()) {
+            List<SystemMetric> metrics = metricRepository.findByHostnameOrderByTimestampDesc(hostname, pageable);
+
+            if (metrics.isEmpty()) {
+                continue;
+            }
+
+            SystemMetric metric = metrics.get(0);
+
+            if (metric.getCpuUsage() != null && metric.getCpuUsage() > cpuThreshold) {
+                alerts.add(AlertDTO.builder()
+                        .hostname(hostname)
+                        .metric("cpu")
+                        .value(metric.getCpuUsage())
+                        .threshold(cpuThreshold)
+                        .build());
+            }
+
+            if (metric.getRamUsage() != null && metric.getRamUsage() > ramThreshold) {
+                alerts.add(AlertDTO.builder()
+                        .hostname(hostname)
+                        .metric("ram")
+                        .value(metric.getRamUsage())
+                        .threshold(ramThreshold)
+                        .build());
+            }
+        }
+
+        return alerts;
     }
 
     public List<String> getHostnames() {
