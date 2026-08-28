@@ -1,5 +1,6 @@
 package com.sysadmin.monitor.service;
 
+import com.sysadmin.monitor.dto.AlertDTO;
 import com.sysadmin.monitor.dto.MetricSummaryDTO;
 import com.sysadmin.monitor.dto.SystemMetricDTO;
 import com.sysadmin.monitor.entity.SystemMetric;
@@ -11,12 +12,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -222,5 +225,90 @@ class MetricServiceTest {
         ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
         verify(metricRepository).findByOrderByTimestampDesc(captor.capture());
         assertEquals(1, captor.getValue().getPageSize());
+    }
+
+    @Test
+    void getAlerts_withCpuOverThreshold_shouldReturnAlert() {
+        ReflectionTestUtils.setField(metricService, "cpuThreshold", 85.0);
+        ReflectionTestUtils.setField(metricService, "ramThreshold", 90.0);
+
+        SystemMetric m1 = SystemMetric.builder()
+                .id(1L)
+                .hostname("PC-01")
+                .timestamp(LocalDateTime.now())
+                .cpuUsage(92.5)
+                .ramUsage(60.0)
+                .diskUsage(50.0)
+                .build();
+
+        when(metricRepository.findDistinctHostnames()).thenReturn(List.of("PC-01"));
+        when(metricRepository.findByHostnameOrderByTimestampDesc(eq("PC-01"), any(Pageable.class)))
+                .thenReturn(List.of(m1));
+
+        List<AlertDTO> result = metricService.getAlerts();
+
+        assertEquals(1, result.size());
+        assertEquals("cpu", result.get(0).getMetric());
+        assertEquals(92.5, result.get(0).getValue());
+        assertEquals(85.0, result.get(0).getThreshold());
+    }
+
+    @Test
+    void getAlerts_withCpuAndRamOverThreshold_shouldReturnTwoAlerts() {
+        ReflectionTestUtils.setField(metricService, "cpuThreshold", 85.0);
+        ReflectionTestUtils.setField(metricService, "ramThreshold", 90.0);
+
+        SystemMetric m1 = SystemMetric.builder()
+                .id(1L)
+                .hostname("PC-02")
+                .timestamp(LocalDateTime.now())
+                .cpuUsage(99.0)
+                .ramUsage(95.0)
+                .diskUsage(50.0)
+                .build();
+
+        when(metricRepository.findDistinctHostnames()).thenReturn(List.of("PC-02"));
+        when(metricRepository.findByHostnameOrderByTimestampDesc(eq("PC-02"), any(Pageable.class)))
+                .thenReturn(List.of(m1));
+
+        List<AlertDTO> result = metricService.getAlerts();
+
+        assertEquals(2, result.size());
+        assertEquals("cpu", result.get(0).getMetric());
+        assertEquals("ram", result.get(1).getMetric());
+        assertEquals("PC-02", result.get(1).getHostname());
+    }
+
+    @Test
+    void getAlerts_underThreshold_shouldReturnEmptyList() {
+        ReflectionTestUtils.setField(metricService, "cpuThreshold", 85.0);
+        ReflectionTestUtils.setField(metricService, "ramThreshold", 90.0);
+
+        SystemMetric m1 = SystemMetric.builder()
+                .id(1L)
+                .hostname("PC-01")
+                .timestamp(LocalDateTime.now())
+                .cpuUsage(30.0)
+                .ramUsage(40.0)
+                .diskUsage(50.0)
+                .build();
+
+        when(metricRepository.findDistinctHostnames()).thenReturn(List.of("PC-01"));
+        when(metricRepository.findByHostnameOrderByTimestampDesc(eq("PC-01"), any(Pageable.class)))
+                .thenReturn(List.of(m1));
+
+        List<AlertDTO> result = metricService.getAlerts();
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void getAlerts_withoutHosts_shouldReturnEmptyList() {
+        when(metricRepository.findDistinctHostnames()).thenReturn(List.of());
+
+        List<AlertDTO> result = metricService.getAlerts();
+
+        assertTrue(result.isEmpty());
+        verify(metricRepository, never()).findByHostnameOrderByTimestampDesc(anyString(), any(Pageable.class));
     }
 }
