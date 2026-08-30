@@ -31,6 +31,9 @@ public class MetricService {
     @Value("${monitor.alerts.ram:90}")
     private double ramThreshold;
 
+    @Value("${monitor.retention.days:7}")
+    private int retentionDays;
+
     public SystemMetric saveMetric(SystemMetricDTO dto) {
 
         SystemMetric metric = SystemMetric.builder()
@@ -117,6 +120,15 @@ public class MetricService {
         }
 
         return alerts;
+    }
+
+    public long deleteOldMetrics() {
+        LocalDateTime limite = LocalDateTime.now().minusDays(retentionDays);
+        long borradas = metricRepository.deleteByTimestampBefore(limite);
+
+        log.info("Retencion - borradas {} metricas anteriores a {}", borradas, limite);
+
+        return borradas;
     }
 
     public List<String> getHostnames() {
