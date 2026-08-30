@@ -4,9 +4,12 @@ import com.sysadmin.monitor.dto.MetricSummaryDTO;
 import com.sysadmin.monitor.entity.SystemMetric;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -15,6 +18,10 @@ public interface SystemMetricRepository extends JpaRepository<SystemMetric, Long
     List<SystemMetric> findByOrderByTimestampDesc(Pageable pageable);
 
     List<SystemMetric> findByHostnameOrderByTimestampDesc(String hostname, Pageable pageable);
+
+    @Modifying
+    @Transactional
+    long deleteByTimestampBefore(LocalDateTime limite);
 
     @Query("SELECT DISTINCT m.hostname FROM SystemMetric m ORDER BY m.hostname")
     List<String> findDistinctHostnames();
