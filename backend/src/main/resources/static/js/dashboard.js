@@ -1,11 +1,14 @@
 const API_BASE = "/api/metrics";
-const INTERVALO = 5000;
+const INTERVALO_POR_DEFECTO = 5000;
 
 const statusEl = document.getElementById("status");
 const cpuValueEl = document.getElementById("cpu-value");
 const ramValueEl = document.getElementById("ram-value");
 const diskValueEl = document.getElementById("disk-value");
 const hostSelect = document.getElementById("host-select");
+const intervaloSelect = document.getElementById("intervalo-select");
+
+let intervaloId = null;
 
 function crearConfig(label, color) {
     return {
@@ -144,15 +147,39 @@ async function fetchMetricas() {
     }
 }
 
+function leerIntervaloGuardado() {
+    const guardado = parseInt(localStorage.getItem("intervalo"), 10);
+    // si no hay nada guardado o es raro nos quedamos con el de por defecto
+    if (!guardado || guardado < 1000) {
+        return INTERVALO_POR_DEFECTO;
+    }
+    return guardado;
+}
+
+function arrancarRefresco(intervalo) {
+    if (intervaloId !== null) {
+        clearInterval(intervaloId);
+    }
+    intervaloId = setInterval(() => {
+        cargarHosts();
+        fetchMetricas();
+    }, intervalo);
+}
+
 // cuando cambia el selector recargamos los datos
 hostSelect.addEventListener("change", fetchMetricas);
 
+// cambiamos cada cuanto se refresca y lo guardamos para la proxima visita
+intervaloSelect.addEventListener("change", () => {
+    const intervalo = parseInt(intervaloSelect.value, 10);
+    localStorage.setItem("intervalo", intervalo);
+    arrancarRefresco(intervalo);
+    fetchMetricas();
+});
+
 // primera carga
+const intervaloInicial = leerIntervaloGuardado();
+intervaloSelect.value = String(intervaloInicial);
 cargarHosts();
 fetchMetricas();
-
-// actualizamos cada 5 segundos
-setInterval(() => {
-    cargarHosts();
-    fetchMetricas();
-}, INTERVALO);
+arrancarRefresco(intervaloInicial);
